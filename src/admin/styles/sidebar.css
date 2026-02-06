@@ -1,0 +1,7 @@
+.sidebar-item.active div {
+  background: #4F46E5;
+}
+
+.sidebar-item div:hover {
+  background: rgba(255, 255, 255, 0.12);
+}

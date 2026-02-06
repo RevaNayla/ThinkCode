@@ -1,0 +1,4 @@
+.input:focus { border-color: #667eea; }
+.textarea:focus { border-color: #667eea; }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); }
+.btn:disabled { background: #ccc; cursor: not-allowed; }
