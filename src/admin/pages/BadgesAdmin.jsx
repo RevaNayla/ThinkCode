@@ -215,7 +215,7 @@ const ActionButtons = styled.div`
   gap: 10px;
 `;
 
-const EMOJIS = ["🏆", "⭐", "🔥", "🎯", "💡", "🥇", "🥈", "🥉", "👏"];
+const EMOJIS = ["🏆", "⭐", "🔥", "🎯", "💡", "🥇", "🥈", "🥉", "👏", "👍", "🎓", "📚", "📝", "🎁"];
 
 export default function BadgeAdmin() {
   const [badges, setBadges] = useState([]);
@@ -388,7 +388,7 @@ export default function BadgeAdmin() {
                 <TableCell>
                   {b.image ? (
                     <BadgeImage
-                      src={`http://localhost:5000${b.image}`}
+                      src={`${import.meta.env.VITE_API_URL}${b.image}`}
                       alt={b.badge_name}
                     />
                   ) : (

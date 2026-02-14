@@ -140,6 +140,7 @@ export default function MiniGame() {
 /* STYLED COMPONENTS */
 
 const Wrapper = styled.div`
+  font-family: 'Roboto', sans-serif;
   padding: 20px 40px;
 `;
 

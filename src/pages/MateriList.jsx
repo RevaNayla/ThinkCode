@@ -11,7 +11,6 @@ export default function MateriList() {
     api
       .get("/materi")
       .then(res => {
-
         setMateri(res.data?.data || []);
       })
       .catch(err => console.error(err));
@@ -29,12 +28,17 @@ export default function MateriList() {
                 <h3>{m.title}</h3>
                 <p>{m.description}</p>
 
-                <ProgressBar>
-                  <div style={{ width: `${m.progress || 0}%` }} />
-                </ProgressBar>
+                <ProgressWrapper>
+                  <ProgressBar>
+                    <ProgressFill style={{ width: `${Math.min(m.progress || 0, 100)}%` }} />
+                    <ProgressText>
+                      {Math.min(m.progress || 0, 100)}%
+                    </ProgressText>
+                  </ProgressBar>
+                </ProgressWrapper>
 
                 <ActionLink to={`/materi/${m.id}`}>
-                  Mulai / Lihat
+                  {m.progress >= 100 ? "Lihat" : "Mulai"}
                 </ActionLink>
               </MateriCard>
             ))}
@@ -48,6 +52,7 @@ export default function MateriList() {
 /*  Styled Components */
 
 const PageWrapper = styled.div`
+  font-family: 'Roboto', sans-serif;
   display: flex;
   width: 100%;
   gap: 24px;
@@ -69,7 +74,7 @@ const CardGrid = styled.div`
 `;
 
 const MateriCard = styled.div`
-  width: 320px;
+  width: 280px;
   background: #ffffff;
   padding: 20px;
   border-radius: 14px;
@@ -88,17 +93,39 @@ const MateriCard = styled.div`
   }
 `;
 
-const ProgressBar = styled.div`
-  height: 10px;
-  background: #e3e3e3;
-  border-radius: 10px;
-  overflow: hidden;
+// Modifikasi: ProgressWrapper sekarang hanya wrap ProgressBar (karena teks sudah di dalam bar)
+const ProgressWrapper = styled.div`
+  position: relative;  // Untuk memastikan positioning overlay
+`;
 
-  div {
-    height: 100%;
-    background: #4a6cf7;
-    transition: 0.3s;
-  }
+// Modifikasi: ProgressBar sekarang sebagai container dengan position relative
+const ProgressBar = styled.div`
+  position: relative;
+  height: 24px;  // Ditingkatkan dari 10px agar teks lebih mudah dibaca
+  background: #e3e3e3;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+`;
+
+// Modifikasi: ProgressFill adalah bagian bar yang terisi (sebelumnya div biasa)
+const ProgressFill = styled.div`
+  height: 100%;
+  background: #4a6cf7;
+  transition: 0.3s;
+`;
+
+// Modifikasi: ProgressText sekarang overlay di tengah bar
+const ProgressText = styled.span`
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);  // Tengah bar
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;  // Warna gelap agar kontras di bar kosong; bisa diubah ke putih jika ingin di atas bar terisi
+  z-index: 1;  // Pastikan di atas fill
 `;
 
 const ActionLink = styled(Link)`

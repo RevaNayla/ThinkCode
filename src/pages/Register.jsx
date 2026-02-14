@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Navbar from "../components/Navbar";
 import api from "../api/axiosClient";
 import Footer from "../components/Footer"; 
@@ -8,34 +8,15 @@ export default function Register() {
   const [data, setData] = useState({
     name: "",
     email: "",
-    class: "",
+    class: "", // Kelas sekarang diketik manual
     password: "",
-    role: "student"
+    // Role dihapus dari state, default "student"
   });
 
-  const [classList, setClassList] = useState([]);
   const [loading, setLoading] = useState(false); 
   const [error, setError] = useState(""); 
 
-  useEffect(() => {
-    const fetchClasses = async () => {
-      try {
-        const res = await api.get("/classes");
-        setClassList(res.data.classes);
-      } catch (err) {
-        console.error(err);
-        setClassList([
-          "X TL 1",
-          "X TL 2",
-          "X TM 1",
-          "X TM 2",
-          "No Class, I'm a teacher",
-        ]);
-      }
-    };
-
-    fetchClasses();
-  }, []);
+  // useEffect untuk fetch classes dihapus karena kelas diketik manual
 
   const submit = async (e) => {
     e.preventDefault();
@@ -43,7 +24,10 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await api.post("/auth/register", data);
+      const res = await api.post("/auth/register", {
+        ...data,
+        role: "student" // Role default student
+      });
 
       alert(res.data.message);
 
@@ -99,32 +83,17 @@ export default function Register() {
 
             <div style={styles.inputGroup}>
               <label style={styles.label}>Kelas</label>
-              <select
+              <input
+                type="text"
+                placeholder="Masukkan kelas Anda (contoh: X TL 1)"
                 value={data.class}
                 onChange={(e) => setData({ ...data, class: e.target.value })}
                 style={styles.input}
                 required
-              >
-                <option value="" disabled>Pilih Kelas</option>
-                {classList.map((kelas, index) => (
-                  <option key={index} value={kelas}>{kelas}</option>
-                ))}
-              </select>
+              />
             </div>
 
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Role</label>
-              <select
-                value={data.role}
-                onChange={(e) => setData({ ...data, role: e.target.value })}
-                style={styles.input}
-                required
-              >
-                <option value="student">Siswa</option>
-                <option value="teacher">Guru</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
+            {/* Field Role dihapus */}
 
             <div style={styles.inputGroup}>
               <label style={styles.label}>Password</label>
@@ -257,4 +226,3 @@ const styles = {
     transition: "color 0.3s ease",
   },
 };
-

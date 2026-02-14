@@ -214,6 +214,7 @@ function Essay({ onSubmit }) {
 
 /* ================= STYLED COMPONENTS ================= */
 const Container = styled.div`
+  font-family: 'Roboto', sans-serif;
   min-height: 100vh;
   display: flex;
 `;

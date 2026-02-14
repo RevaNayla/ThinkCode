@@ -73,6 +73,7 @@ export default function Leaderboard({ user }) {
         {/* GRID 2 COLUMN */}
         <div
           style={{
+            fontFamily: 'Roboto, sans-serif',
             display: "grid",
             gridTemplateColumns: "420px 420px",
             gap: 40,
@@ -103,6 +104,7 @@ export default function Leaderboard({ user }) {
                     loadKelompok(m.id);
                   }}
                   style={{
+                    fontFamily: 'Roboto, sans-serif', 
                     width: "100%",
                     padding: 12,
                     borderRadius: 14,
@@ -312,6 +314,15 @@ function GroupLeaderboardItem({ rank, room }) {
               })}
             </span>
           )}
+        </div>
+        <div
+          style={{
+            fontSize: 13,
+            color: "#6b7280",
+            marginTop: 6
+          }}
+        >
+          Performance: {Math.round(room.performanceScore || 0)}%
         </div>
       </div>
     </div>

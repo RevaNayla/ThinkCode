@@ -97,7 +97,7 @@ export default function TabOrientasi({ materiId }) {
       {data?.content ? (
         data.content.includes("/uploads/") ? (
         <video
-          src={`http://localhost:5000${data.content}`}
+          src={`${import.meta.env.VITE_API_URL}${data.content}`}
           controls
           preload="metadata"
           style={{

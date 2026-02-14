@@ -16,7 +16,7 @@ export default function Dashboard() {
   const CircleBadge = ({ title, image }) => (
     <CircleBox>
       {image ? (
-        <BadgeImage src={`http://localhost:5000${image}`} alt={title} />
+        <BadgeImage src={`${import.meta.env.VITE_API_URL}${image}`} alt={title} />
       ) : (
         <BadgeFallback>🏆</BadgeFallback>
       )}
@@ -172,6 +172,7 @@ export default function Dashboard() {
 /* ================= STYLING ================= */
 
 const PageWrapper = styled.div`
+  font-family: 'Roboto', sans-serif;
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 20px;

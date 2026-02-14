@@ -75,9 +75,8 @@ export default function AdminRoomMateri() {
   const fetchMateri = async () => {
     setLoading(true);
     try {
-      // Asumsi endpoint /api/admin/materi ada di backend
       const res = await fetch(
-        `http://localhost:5000/api/admin/discussion/materi`,
+        `${import.meta.env.VITE_API_URL}/materi`,
         {
           headers: {
             "Content-Type": "application/json",

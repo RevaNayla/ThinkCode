@@ -50,19 +50,6 @@ export default function Navbar() {
         </li>
         <li>
           <Link
-            to="/help"
-            style={{
-              ...styles.link,
-              ...(hoveredLink === "help" ? styles.linkHover : {}),
-            }}
-            onMouseEnter={() => setHoveredLink("help")}
-            onMouseLeave={() => setHoveredLink(null)}
-          >
-            Help
-          </Link>
-        </li>
-        <li>
-          <Link
             to="/login"
             style={{
               ...styles.link,

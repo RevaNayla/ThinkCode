@@ -21,13 +21,12 @@ export default function Footer() {
             <li><Link to="/" style={styles.footerLink}>Home</Link></li>
             <li><Link to="/tutorial" style={styles.footerLink}>Tutorial</Link></li>
             <li><Link to="/about" style={styles.footerLink}>About</Link></li>
-            <li><Link to="/help" style={styles.footerLink}>Help</Link></li>
             <li><Link to="/login" style={styles.footerLink}>Login</Link></li>
           </ul>
         </div>
         <div style={styles.footerSection}>
           <h4 style={styles.footerSubtitle}>Kontak Kami</h4>
-          <p style={styles.footerText}>Email: N/A</p>
+          <p style={styles.footerText}>Email: thinkcode@gmail.com </p>
           <p style={styles.footerText}>Telepon: N/A</p>
         </div>
       </div>

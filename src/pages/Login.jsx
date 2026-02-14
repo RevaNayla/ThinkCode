@@ -89,9 +89,6 @@ export default function Login() {
             <p style={styles.small}>
               Belum punya akun? <a href="/register" style={styles.link}>Daftar Sekarang</a>
             </p>
-            <p style={styles.small}>
-              Lupa password? <a href="/help" style={styles.link}>Bantuan</a>
-            </p>
           </div>
         </div>
       </div>

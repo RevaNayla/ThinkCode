@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import {
   apiGet,
   apiPost,
+  apiPut,
   apiPatch,
   apiDelete,
 } from "../../services/api";
@@ -10,7 +11,6 @@ import { utils, writeFile } from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import styled from "styled-components"; 
-
 
 const theme = {
   colors: {
@@ -41,7 +41,6 @@ const StyledButton = styled.button`
 
   &:hover {
     background-color: ${(props) => {
-
       const color = theme.colors[props.variant] || theme.colors.primary;
       return color.replace(/[^,]+(?=\$)/, (m) => parseInt(m) - 20);
     }};
@@ -70,6 +69,7 @@ export default function AdminUsers() {
   const [q, setQ] = useState("");
   const [filterClass, setFilterClass] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [filterRole, setFilterRole] = useState("");
 
   const [page, setPage] = useState(1);
   const [pageSize] = useState(12);
@@ -86,6 +86,17 @@ export default function AdminUsers() {
     name: "",
     email: "",
     class: "",
+    role: "student",
+  });
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [editUser, setEditUser] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    class: "",
+    role: "",
+    xp: 0,
   });
 
   const classOptions = useMemo(() => {
@@ -103,11 +114,11 @@ export default function AdminUsers() {
         `q=${encodeURIComponent(q)}`,
         `page=${page}`,
         `limit=${pageSize}`,
-        `role=student`,
       ];
 
       if (filterClass) query.push(`class=${filterClass}`);
       if (filterStatus !== "") query.push(`active=${filterStatus}`);
+      if (filterRole) query.push(`role=${filterRole}`);
 
       const res = await apiGet(`/admin/users?${query.join("&")}`);
       setUsers(res.data ?? []);
@@ -123,10 +134,10 @@ export default function AdminUsers() {
 
   useEffect(() => {
     load();
-  }, [q, page, filterClass, filterStatus]);
+  }, [q, page, filterClass, filterStatus, filterRole]);
 
   async function handleResetPassword(id) {
-    if (!window.confirm("Reset password siswa ini?")) return;
+    if (!window.confirm("Reset password user ini?")) return;
     try {
       await apiPatch(`/admin/users/${id}/reset-password`, {});
       alert("Password berhasil direset.");
@@ -145,7 +156,7 @@ export default function AdminUsers() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm("Hapus akun siswa ini?")) return;
+    if (!window.confirm("Hapus akun user ini?")) return;
     try {
       await apiDelete(`/admin/users/${id}`);
       load();
@@ -154,7 +165,7 @@ export default function AdminUsers() {
     }
   }
 
-  async function handleAddStudent() {
+  async function handleAddUser() {
     if (!addForm.name || !addForm.email) {
       alert("Nama dan Email wajib diisi");
       return;
@@ -165,16 +176,55 @@ export default function AdminUsers() {
         name: addForm.name,
         email: addForm.email,
         class: addForm.class,
-        role: "student",
+        role: addForm.role,
       });
 
-      alert("Siswa berhasil ditambahkan\nPassword default: password123");
-      setAddForm({ name: "", email: "", class: "" });
+      alert(`${addForm.role} berhasil ditambahkan\nPassword default: password123`);
+      setAddForm({ name: "", email: "", class: "", role: "student" });
       setAddOpen(false);
       load();
     } catch (e) {
-      alert("Gagal tambah siswa: " + e.message);
+      alert("Gagal tambah user: " + e.message);
     }
+  }
+
+  async function handleEditUser() {
+    if (!editForm.name || !editForm.email) {
+      alert("Nama dan Email wajib diisi");
+      return;
+    }
+
+    try {
+    await apiPut(`/admin/users/${editUser.id}`, {
+      name: editForm.name,
+      email: editForm.email,
+      class: editForm.class,
+      role: editForm.role,
+      xp: editForm.xp,
+    });
+
+      alert("User berhasil diperbarui");
+      setEditForm({ name: "", email: "", class: "", role: "", xp: 0 });
+      setEditUser(null);
+      setEditOpen(false);
+      load();
+    } catch (e) {
+      alert("Gagal edit user: " + e.message);
+    }
+  }
+
+  function openEdit(u) {
+    console.log("Opening edit for user:", u); 
+    setEditUser(u);
+    setEditForm({
+      name: u.name,
+      email: u.email,
+      class: u.class || "",
+      role: u.role,
+      xp: u.xp || 0,
+    });
+    setEditOpen(true);
+    console.log("editOpen set to true"); 
   }
 
   function exportExcel() {
@@ -184,18 +234,19 @@ export default function AdminUsers() {
       Email: u.email,
       Kelas: u.class ?? "-",
       XP: u.xp ?? 0,
+      Role: u.role,
       Status: u.active ? "Aktif" : "Nonaktif",
     }));
 
     const ws = utils.json_to_sheet(rows);
     const wb = utils.book_new();
-    utils.book_append_sheet(wb, ws, "Daftar Siswa");
-    writeFile(wb, "daftar_siswa.xlsx");
+    utils.book_append_sheet(wb, ws, "Daftar User");
+    writeFile(wb, "daftar_user.xlsx");
   }
 
   function exportPDF() {
     const doc = new jsPDF();
-    doc.text("Daftar Siswa", 14, 16);
+    doc.text("Daftar User", 14, 16);
 
     const body = users.map((u, i) => [
       (page - 1) * pageSize + i + 1,
@@ -203,16 +254,16 @@ export default function AdminUsers() {
       u.email,
       u.class ?? "-",
       u.xp ?? 0,
-      u.active ? "Aktif" : "Nonaktif",
+      u.role,
     ]);
 
     doc.autoTable({
-      head: [["#", "Nama", "Email", "Kelas", "XP", "Status"]],
+      head: [["#", "Nama", "Email", "Kelas", "XP", "Role", "Status"]],
       body,
       startY: 22,
     });
 
-    doc.save("daftar_siswa.pdf");
+    doc.save("daftar_user.pdf");
   }
 
   async function openProfile(u) {
@@ -239,7 +290,7 @@ export default function AdminUsers() {
   return (
     <div className="admin-container">
       <div className="users-header-modern">
-        <h1>👨‍🎓 Manajemen Siswa</h1>
+        <h1>👨‍🎓 Manajemen User</h1>
 
         <div className="filter-bar">
           <input
@@ -266,31 +317,24 @@ export default function AdminUsers() {
             ))}
           </select>
 
-          {/*<select
+          <select
             className="select-modern"
-            value={filterStatus}
+            value={filterRole}
             onChange={(e) => {
-              setFilterStatus(e.target.value);
+              setFilterRole(e.target.value);
               setPage(1);
             }}
           >
-            <option value="">Semua Status</option>
-            <option value="1">Aktif</option>
-            <option value="0">Nonaktif</option>
-          </select>*/}
+            <option value="">Semua Role</option>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+          </select>
 
-          {/*<StyledButton variant="secondary" onClick={() => {
-            setQ("");
-            setFilterClass("");
-            setFilterStatus("");
-            setPage(1);
-          }}>
-            Reset
-          </StyledButton>*/}
 
           <StyledButton variant="success" onClick={exportExcel}>Export Excel</StyledButton>
           <StyledButton variant="primary" onClick={() => setAddOpen(true)}>
-            + Tambah Siswa
+            + Tambah User
           </StyledButton>
         </div>
       </div>
@@ -307,13 +351,13 @@ export default function AdminUsers() {
                 <th>Email</th>
                 <th>Kelas</th>
                 <th>XP</th>
-                {/*<th>Status</th>*/}
-                <th style={{ width: 260 }}>Aksi</th>
+                <th>Role</th>
+                <th style={{ width: 300 }}>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {users.length === 0 && (
-                <tr><td colSpan="7" className="no-data">Tidak ada data</td></tr>
+                <tr><td colSpan="8" className="no-data">Tidak ada data</td></tr>
               )}
               {users.map((u, i) => (
                 <tr key={u.id}>
@@ -322,13 +366,11 @@ export default function AdminUsers() {
                   <td>{u.email}</td>
                   <td>{u.class ?? "-"}</td>
                   <td>{u.xp ?? 0}</td>
-                  {/*<td>{u.active ? "Aktif" : "Nonaktif"}</td>*/}
+                  <td>{u.role}</td>
                   <td>
                     <StyledButton variant="info" onClick={() => openProfile(u)}>Profil</StyledButton>
-                    <StyledButton variant="warning" onClick={() => handleResetPassword(u.id)}>Reset PW</StyledButton>
-                    {/*<StyledButton variant="secondary" onClick={() => handleToggleActive(u.id, u.active)}>
-                      {u.active ? "Nonaktifkan" : "Aktifkan"}
-                    </StyledButton>*/}
+                    <StyledButton variant="warning" onClick={() => openEdit(u)}>Edit</StyledButton>
+                    <StyledButton variant="secondary" onClick={() => handleResetPassword(u.id)}>Reset PW</StyledButton>
                     <StyledButton variant="danger" onClick={() => handleDelete(u.id)}>Hapus</StyledButton>
                   </td>
                 </tr>
@@ -366,6 +408,7 @@ export default function AdminUsers() {
                     <tr><td>Email</td><td>{modalUser.email}</td></tr>
                     <tr><td>Kelas</td><td>{modalUser.class}</td></tr>
                     <tr><td>XP</td><td>{modalUser.xp}</td></tr>
+                    <tr><td>Role</td><td>{modalUser.role}</td></tr>
                   </tbody>
                 </table>
 
@@ -400,7 +443,7 @@ export default function AdminUsers() {
         <div className="modal-overlay">
           <div className="modal-modern">
             <div className="modal-header">
-              <h2>Tambah Siswa</h2>
+              <h2>Tambah User</h2>
               <StyledButton variant="danger" className="small" onClick={() => setAddOpen(false)}>X</StyledButton>
             </div>
 
@@ -422,8 +465,65 @@ export default function AdminUsers() {
               value={addForm.class}
               onChange={(e) => setAddForm({ ...addForm, class: e.target.value })}
             />
+            <select
+              className="select-modern"
+              value={addForm.role}
+              onChange={(e) => setAddForm({ ...addForm, role: e.target.value })}
+            >
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
+            </select>
 
-            <StyledButton variant="success" onClick={handleAddStudent}>Simpan</StyledButton>
+            <StyledButton variant="success" onClick={handleAddUser}>Simpan</StyledButton>
+          </div>
+        </div>
+      )}
+
+      {editOpen && editUser && (
+        <div className="modal-overlay">
+          <div className="modal-modern">
+            <div className="modal-header">
+              <h2>Edit User: {editUser.name}</h2>
+              <StyledButton variant="danger" className="small" onClick={() => setEditOpen(false)}>X</StyledButton>
+            </div>
+
+            <input
+              className="input-modern"
+              placeholder="Nama"
+              value={editForm.name}
+              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+            />
+            <input
+              className="input-modern"
+              placeholder="Email"
+              value={editForm.email}
+              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+            />
+            <input
+              className="input-modern"
+              placeholder="Kelas"
+              value={editForm.class}
+              onChange={(e) => setEditForm({ ...editForm, class: e.target.value })}
+            />
+            <select
+              className="select-modern"
+              value={editForm.role}
+              onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+            >
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
+            </select>
+            <input
+              className="input-modern"
+              type="number"
+              placeholder="XP"
+              value={editForm.xp}
+              onChange={(e) => setEditForm({ ...editForm, xp: parseInt(e.target.value) || 0 })}
+            />
+
+            <StyledButton variant="success" onClick={handleEditUser}>Simpan</StyledButton>
           </div>
         </div>
       )}

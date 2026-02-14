@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import styled from "styled-components"; // Tambahkan import ini
 import api from "../api/axiosClient";
 import MiniLessonModal from "../components/MiniLessonModal";
 import Layout from "../components/Layout";
@@ -9,12 +10,13 @@ export default function MateriDetail() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [showMini, setShowMini] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState([]); // Track steps untuk hindari duplikat
 
   useEffect(() => {
     api
       .get(`/materi/${id}`)
       .then(res => {
-        setData(res.data?.data || null); 
+        setData(res.data?.data || null);
       })
       .catch(err => console.error(err));
   }, [id]);
@@ -27,79 +29,54 @@ export default function MateriDetail() {
     s => s.type === "video" && s.content
   );
 
+  const handleVideoEnd = () => {
+    console.log('Video ended, attempting to complete "watch_video"');
+    if (!completedSteps.includes("watch_video")) {
+      api.post(`/materi/${id}/complete-step`, { step: "watch_video" })
+        .then(() => {
+          console.log('Step "watch_video" completed');
+          setCompletedSteps(prev => [...prev, "watch_video"]);
+        })
+        .catch(err => console.error('Error completing "watch_video":', err));
+    }
+  };
+
+  const handleOpenMini = () => {
+    console.log('Mini lesson opened, attempting to complete "open_mini_lesson"');
+    setShowMini(true);
+    if (!completedSteps.includes("open_mini_lesson")) {
+      api.post(`/materi/${id}/complete-step`, { step: "open_mini_lesson" })
+        .then(() => {
+          console.log('Step "open_mini_lesson" completed');
+          setCompletedSteps(prev => [...prev, "open_mini_lesson"]);
+        })
+        .catch(err => console.error('Error completing "open_mini_lesson":', err));
+    }
+  };
+
   return (
     <Layout>
-      <div
-        style={{
-          padding: "30px 40px",
-
-        }}
-      >
+      <Wrapper>
         {/* HEADER */}
-        <div
-          style={{
-            marginBottom: 20,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            position: "sticky",
-            top: 0,
-            background: "white",
-            zIndex: 10,
-            padding: "10px 0",
-          }}
-        >
-          <div>
-            <h2 style={{ margin: 0 }}>{data.materi?.title}</h2>
-            <p style={{ margin: 0, color: "#666" }}>
-              Orientasi Masalah
-            </p>
-          </div>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              background: "#3759c7",
-              color: "white",
-              border: "none",
-              borderRadius: 12,
-              padding: "10px 20px",
-              cursor: "pointer",
-              fontWeight: 600,
-              fontSize: 14,
-              transition: "background 0.3s, transform 0.2s",
-            }}
-            onMouseOver={(e) => {
-              e.target.style.background = "#2a4a9c";
-              e.target.style.transform = "scale(1.02)";
-            }}
-            onMouseOut={(e) => {
-              e.target.style.background = "#3759c7";
-              e.target.style.transform = "scale(1)";
-            }}
-          >
+        <Header>
+          <HeaderLeft>
+            <Title>{data.materi?.title}</Title>
+            <Breadcrumb>Orientasi Masalah</Breadcrumb>
+          </HeaderLeft>
+          <BackButton onClick={() => navigate(-1)}>
             Kembali
-          </button>
-        </div>
+          </BackButton>
+        </Header>
 
         {/* VIDEO WRAPPER */}
-        <div
-          style={{
-            width: "70%",
-            height: 380,
-            background: "#d8d8d8",
-            borderRadius: 12,
-            position: "relative",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
+        <VideoWrapper>
           {videoSection ? (
             videoSection.content.includes("/uploads/") ? (
               <video
-                src={`http://localhost:5000${videoSection.content}`}
+                src={`${import.meta.env.VITE_API_URL}${videoSection.content}`}
                 controls
                 preload="metadata"
+                onEnded={handleVideoEnd}
                 style={{
                   width: "100%",
                   height: "100%",
@@ -120,56 +97,23 @@ export default function MateriDetail() {
               />
             )
           ) : (
-            <strong style={{ fontSize: 22 }}>Video</strong>
+            <VideoPlaceholder>Video</VideoPlaceholder>
           )}
 
           {/* INFO BUTTON */}
-          <button
-            onClick={() => setShowMini(true)}
-            style={{
-              position: "absolute",
-              left: -15,
-              bottom: -15,
-              width: 45,
-              height: 45,
-              borderRadius: "50%",
-              background: "#4e8df5",
-              border: "none",
-              color: "white",
-              fontSize: 20,
-              cursor: "pointer",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
-            }}
-          >
+          <InfoButton onClick={handleOpenMini}>
             i
-          </button>
-        </div>
+          </InfoButton>
+        </VideoWrapper>
 
         {/* BUTTON RUANG DISKUSI */}
-        <div
-          style={{
-            marginTop: 40,
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-end",
-          }}
-        >
+        <DiscussionButtonContainer>
           <Link to={`/materi/${id}/discussion`}>
-            <button
-              style={{
-                background: "#a7eeb5",
-                padding: "12px 35px",
-                borderRadius: 14,
-                border: "none",
-                cursor: "pointer",
-                fontSize: 15,
-                fontWeight: 500,
-              }}
-            >
+            <DiscussionButton>
               Join Ruang Diskusi
-            </button>
+            </DiscussionButton>
           </Link>
-        </div>
+        </DiscussionButtonContainer>
 
         {/* MINI LESSON MODAL */}
         {showMini && (
@@ -179,7 +123,124 @@ export default function MateriDetail() {
             content={data.miniLesson?.content || "Mini lesson tidak ditemukan."}
           />
         )}
-      </div>
+      </Wrapper>
     </Layout>
   );
 }
+
+// Styled Components
+const Wrapper = styled.div`
+  padding: 20px 40px;
+  font-family: 'Roboto', sans-serif;
+`;
+
+const Header = styled.div`
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  z-index: 10;
+  padding: 20px 25px;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+`;
+
+const HeaderLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const Title = styled.h2`
+  margin: 0;
+  color: #2c3e50;
+  font-weight: 700;
+  font-size: 32px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const Breadcrumb = styled.div`
+  font-size: 16px;
+  color: #7f8c8d;
+  margin-top: 8px;
+  font-weight: 500;
+`;
+
+const BackButton = styled.button`
+  background: #3759c7;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 28px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #2a4a9c;
+    transform: translateY(-2px);
+  }
+`;
+
+const VideoWrapper = styled.div`
+  width: 70%;
+  height: 380px;
+  background: #d8d8d8;
+  border-radius: 12px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const VideoPlaceholder = styled.strong`
+  font-size: 22px;
+`;
+
+const InfoButton = styled.button`
+  position: absolute;
+  left: -15px;
+  bottom: -15px;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #4e8df5;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #3b7dd8;
+    transform: scale(1.1);
+  }
+`;
+
+const DiscussionButtonContainer = styled.div`
+  margin-top: 40px;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const DiscussionButton = styled.button`
+  background: #a7eeb5;
+  padding: 12px 35px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #8fd3f4;
+    transform: translateY(-2px);
+  }
+`;

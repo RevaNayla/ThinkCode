@@ -21,11 +21,14 @@ export default function AdminSubmission() {
   const [currentFile, setCurrentFile] = useState(null);
   const [badges, setBadges] = useState([]); 
 
+  // State baru untuk modal jawaban
+  const [answerModalOpen, setAnswerModalOpen] = useState(false);
+  const [currentAnswer, setCurrentAnswer] = useState("");
+
   useEffect(() => {
     loadMateri();
     loadBadges(); 
   }, []);
-
 
   async function loadMateri() {
     const res = await apiGet("/materi");
@@ -37,7 +40,6 @@ export default function AdminSubmission() {
     setBadges(res?.data || []);
   }
 
- 
   async function chooseMateri(materi) {
     setSelectedMateri(materi);
     setSelectedRoom(null);
@@ -53,39 +55,39 @@ export default function AdminSubmission() {
     setSubmissions(res?.data || []);
   }
 
-// ================= EXPORT SEMUA SUBMISSIONS =================
-const exportAllSubmissions = async () => {
-  try {
-    const res = await api.get("/admin/submissions"); 
-    const data = res.data.data || []; 
+  // ================= EXPORT SEMUA SUBMISSIONS =================
+  const exportAllSubmissions = async () => {
+    try {
+      const res = await api.get("/admin/submissions"); 
+      const data = res.data.data || []; 
 
-    if (!Array.isArray(data) || data.length === 0) {
-      return alert("Tidak ada data submission untuk diexport.");
+      if (!Array.isArray(data) || data.length === 0) {
+        return alert("Tidak ada data submission untuk diexport.");
+      }
+
+      const formatted = data.map(sub => ({
+        "Nama Siswa": sub.User?.name || "-",
+        "Materi": sub.Materi?.title || "-",
+        "Room": sub.DiscussionRoom?.title || "-",
+        "Jawaban": sub.note || "-",
+        "File Path": sub.filePath || "-",
+        "Status": sub.status || "-",
+        "Score": sub.score || "-",
+        "Feedback": sub.feedback || "-",
+        "Badge": sub.Badge?.badge_name || "-",
+        "Tanggal": sub.createdAt ? new Date(sub.createdAt).toLocaleString() : "-"
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(formatted);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Submissions");
+      XLSX.writeFile(wb, "submissions.xlsx");
+
+    } catch (err) {
+      console.error("Export error:", err);
+      alert("Gagal export: " + err.message);
     }
-
-    const formatted = data.map(sub => ({
-      "Nama Siswa": sub.User?.name || "-",
-      "Materi": sub.Materi?.title || "-",
-      "Room": sub.DiscussionRoom?.title || "-",
-      "Jawaban": sub.note || "-",
-      "File Path": sub.filePath || "-",
-      "Status": sub.status || "-",
-      "Score": sub.score || "-",
-      "Feedback": sub.feedback || "-",
-      "Badge": sub.Badge?.badge_name || "-",
-      "Tanggal": sub.createdAt ? new Date(sub.createdAt).toLocaleString() : "-"
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(formatted);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Submissions");
-    XLSX.writeFile(wb, "submissions.xlsx");
-
-  } catch (err) {
-    console.error("Export error:", err);
-    alert("Gagal export: " + err.message);
-  }
-};
+  };
 
   function openModal(sub) {
     setModalData(sub);
@@ -97,8 +99,15 @@ const exportAllSubmissions = async () => {
   async function saveFeedback() {
     if (!modalData) return;
 
+    // Validasi sederhana: score harus angka antara 0-100
+    const scoreNum = Number(score);
+    if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 100) {
+      alert("Score harus berupa angka antara 0-100.");
+      return;
+    }
+
     await apiPost(`/admin/submissions/${modalData.id}/feedback`, {
-      score: Number(score),
+      score: scoreNum,
       comment,
       badge_id: badge ? Number(badge) : null, 
     });
@@ -106,7 +115,7 @@ const exportAllSubmissions = async () => {
     setSubmissions(prev =>
       prev.map(s =>
         s.id === modalData.id
-          ? { ...s, status: "graded", score: Number(score), feedback: comment, badge_id: Number(badge) }
+          ? { ...s, status: "graded", score: scoreNum, feedback: comment, badge_id: Number(badge) }
           : s
       )
     );
@@ -119,7 +128,7 @@ const exportAllSubmissions = async () => {
     if (!sub.filePath) return;
     setCurrentFile({
       name: sub.filePath.split("/").pop(),
-      url: `http://localhost:5000${sub.filePath}`,
+      url: `${import.meta.env.VITE_API_URL}${sub.filePath}`,
     });
     setFileModalOpen(true);
   };
@@ -180,12 +189,21 @@ const exportAllSubmissions = async () => {
     }
   };
 
+  // Fungsi baru untuk modal jawaban
+  const openAnswerModal = (note) => {
+    setCurrentAnswer(note);
+    setAnswerModalOpen(true);
+  };
+
+  const closeAnswerModal = () => {
+    setAnswerModalOpen(false);
+    setCurrentAnswer("");
+  };
 
   return (
     <div style={{ padding: 30 }}>
       <h1 style={{ marginBottom: 20 }}>📝 Manajemen Submission</h1>
 
-      
       {/* ================= BUTTON EXPORT ================= */}
       <button
         onClick={exportAllSubmissions}
@@ -339,9 +357,21 @@ const exportAllSubmissions = async () => {
                   <td style={{ padding: 12 }}>{sub.User?.name}</td>
                   <td style={{ padding: 12 }}>
                     {sub.note ? (
-                      <span title={sub.note}>
+                      <button
+                        onClick={() => openAnswerModal(sub.note)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#2563EB",
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          padding: 0,
+                        }}
+                        title="Klik untuk lihat jawaban lengkap"
+                      >
                         {sub.note.length > 50 ? `${sub.note.substring(0, 50)}...` : sub.note}
-                      </span>
+                      </button>
                     ) : (
                       "-"
                     )}
@@ -387,7 +417,7 @@ const exportAllSubmissions = async () => {
         </>
       )}
 
-      {/* ===================== MODAL FEEDBACK ===================== */}
+      {/* ===================== MODAL FEEDBACK (DIIMPROVISASI) ===================== */}
       {modalData && (
         <div
           style={{
@@ -396,61 +426,131 @@ const exportAllSubmissions = async () => {
             left: 0,
             width: "100%",
             height: "100%",
-            background: "rgba(0,0,0,0.4)",
+            background: "rgba(0,0,0,0.5)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
+            zIndex: 1000,
           }}
+          onClick={() => setModalData(null)}
         >
           <div
             style={{
-              width: 420,
+              width: "450px",
               background: "white",
-              padding: 25,
-              borderRadius: 12,
-              boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+              padding: "30px",
+              borderRadius: "16px",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+              position: "relative",
             }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <h2>Feedback untuk {modalData.User?.name}</h2>
-
-            <label>Score</label>
-            <input
-              type="number"
-              value={score}
-              onChange={e => setScore(e.target.value)}
-              style={{ width: "100%", marginBottom: 10 }}
-            />
-
-            <label>Komentar</label>
-            <textarea
-              value={comment}
-              onChange={e => setComment(e.target.value)}
-              style={{ width: "100%", marginBottom: 10 }}
-            />
-
-            <label>Badge</label>
-            <select
-              value={badge}
-              onChange={e => setBadge(e.target.value)}
-              style={{ width: "100%", marginBottom: 20 }}
+            <button
+              onClick={() => setModalData(null)}
+              style={{
+                position: "absolute",
+                top: "15px",
+                right: "15px",
+                background: "none",
+                border: "none",
+                fontSize: "24px",
+                cursor: "pointer",
+                color: "#666",
+              }}
             >
-              <option value="">— pilih —</option>
-              {badges.map(b => (
-                <option key={b.id} value={b.id}>
-                  {b.badge_name}
-                </option>
-              ))}
-            </select>
+              ×
+            </button>
+            <h2 style={{ marginTop: 0, marginBottom: "20px", color: "#333" }}>
+              Feedback untuk {modalData.User?.name}
+            </h2>
 
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <button onClick={() => setModalData(null)}>Tutup</button>
+            <div style={{ marginBottom: "15px" }}>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Score (0-100)</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={score}
+                onChange={e => setScore(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  fontSize: "16px",
+                  boxSizing: "border-box",
+                }}
+                placeholder="Masukkan score"
+              />
+            </div>
+
+            <div style={{ marginBottom: "15px" }}>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Komentar</label>
+              <textarea
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  fontSize: "16px",
+                  minHeight: "80px",
+                  boxSizing: "border-box",
+                  resize: "vertical",
+                }}
+                placeholder="Masukkan komentar feedback"
+              />
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Badge</label>
+              <select
+                value={badge}
+                onChange={e => setBadge(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  fontSize: "16px",
+                  boxSizing: "border-box",
+                }}
+              >
+                <option value="">— Pilih Badge —</option>
+                {badges.map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.badge_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button
+                onClick={() => setModalData(null)}
+                style={{
+                  padding: "10px 20px",
+                  background: "#f3f4f6",
+                  color: "#333",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                }}
+              >
+                Batal
+              </button>
               <button
                 onClick={saveFeedback}
                 style={{
+                  padding: "10px 20px",
                   background: "#4F46E5",
                   color: "white",
-                  padding: "8px 14px",
-                  borderRadius: 8,
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontSize: "16px",
                 }}
               >
                 Simpan
@@ -507,6 +607,59 @@ const exportAllSubmissions = async () => {
             </button>
             <h4 style={{ marginTop: 0, color: "#2563EB" }}>{currentFile?.name}</h4>
             {renderFileModalContent()}
+          </div>
+        </div>
+      )}
+
+      {/* ===================== MODAL JAWABAN ===================== */}
+      {answerModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+          onClick={closeAnswerModal}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 16,
+              padding: 20,
+              maxWidth: "600px",
+              maxHeight: "80%",
+              overflow: "auto",
+              position: "relative",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closeAnswerModal}
+              style={{
+                position: "absolute",
+                top: 10,
+                right: 10,
+                background: "none",
+                border: "none",
+                fontSize: 20,
+                cursor: "pointer",
+                color: "#333",
+              }}
+            >
+              ×
+            </button>
+            <h4 style={{ marginTop: 0, color: "#2563EB" }}>Jawaban Lengkap</h4>
+            <div style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
+              {currentAnswer}
+            </div>
           </div>
         </div>
       )}

@@ -25,7 +25,7 @@ export default function Achievement() {
   if (loading) return <p style={{ padding: 30 }}>Memuat data...</p>;
 
   return (
-    <div style={{ display: "flex", }}>
+    <div style={{ display: "flex", fontFamily: 'Roboto, sans-serif' }}>
       <Sidebar collapsed={collapsed} toggleSidebar={toggleSidebar} />
 
       <main

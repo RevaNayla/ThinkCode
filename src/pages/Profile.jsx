@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import api from "../api/axiosClient";
 import Layout from "../components/Layout";
 
-const BASE_URL = "http://localhost:5000"; 
 export default function Profile() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -253,6 +252,7 @@ function StatBoxWithButton({ label, value, buttonText, onButtonClick }) {
 
 const styles = {
   container: {
+    fontFamily: 'Roboto, sans-serif',
     padding: 30,
 
   },

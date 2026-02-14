@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import styled from "styled-components"; // Tambahkan import ini
 import api from "../api/axiosClient";
 import Layout from "../components/Layout";
 
@@ -14,7 +15,7 @@ export default function DiscussionRooms() {
     if (!id) return;
 
     // Fetch rooms
-      api.get(`/discussion/rooms/${id}`)
+    api.get(`/discussion/rooms/${id}`)
       .then((res) => {
         setRooms(res.data?.data || []);
       })
@@ -36,7 +37,11 @@ export default function DiscussionRooms() {
   // Fungsi untuk join room
   const handleJoinRoom = async (roomId) => {
     try {
+      console.log('Joining room, attempting to complete "join_discussion"');
       await api.post(`/discussion/room/${roomId}/join`);
+      api.post(`/materi/${id}/complete-step`, { step: "join_discussion" })
+        .then(() => console.log('Step "join_discussion" completed'))
+        .catch(err => console.error('Error completing "join_discussion":', err));
       window.location.href = `/materi/${id}/room/${roomId}`;
     } catch (err) {
       alert(err.response?.data?.message || "Gagal join room");
@@ -47,151 +52,209 @@ export default function DiscussionRooms() {
 
   return (
     <Layout>
-      <div
-        style={{
-          padding: "15px 30px",
-        }}
-      >
+      <Wrapper>
         {/* HEADER */}
-        <div
-          style={{
-            marginBottom: 25,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            position: "sticky",
-            top: 0,
-            background: "white",
-            zIndex: 10,
-            padding: "10px 0",
-          }}
-        >
-          <div>
-            <h2 style={{ margin: 0 }}>Ruang Diskusi</h2>
-            <p style={{ margin: 0, color: "#666" }}>
+        <Header>
+          <HeaderLeft>
+            <Title>Ruang Diskusi</Title>
+            <Breadcrumb>
+              Orientasi Masalah &gt; Ruang Diskusi
+            </Breadcrumb>
+            <Breadcrumb>
               Pilih ruang diskusi yang tersedia
-            </p>
-          </div>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              background: "#3759c7",
-              color: "white",
-              border: "none",
-              borderRadius: 12,
-              padding: "10px 20px",
-              cursor: "pointer",
-              fontWeight: 600,
-              fontSize: 14,
-              transition: "background 0.3s, transform 0.2s",
-            }}
-            onMouseOver={(e) => {
-              e.target.style.background = "#2a4a9c";
-              e.target.style.transform = "scale(1.02)";
-            }}
-            onMouseOut={(e) => {
-              e.target.style.background = "#3759c7";
-              e.target.style.transform = "scale(1)";
-            }}
-          >
+            </Breadcrumb>
+          </HeaderLeft>
+          <BackButton onClick={() => navigate(-1)}>
             Kembali
-          </button>
-        </div>
+          </BackButton>
+        </Header>
 
         {/* LIST ROOM */}
-        <div
-          style={{
-            display: "flex",
-            gap: 20,
-            flexWrap: "wrap",
-          }}
-        >
+        <RoomList>
           {rooms.map((room) => {
             const isJoined = userProgress?.roomId === room.id; 
             const hasJoinedOther =
               userProgress?.roomId && userProgress.roomId !== room.id; 
 
             return (
-              <div
-                key={room.id}
-                style={{
-                  width: 260,
-                  background: "white",
-                  padding: 20,
-                  borderRadius: 14,
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                }}
-              >
-                <h3 style={{ marginTop: 0 }}>
-                   {room.name || room.title}
-                </h3>
+              <RoomCard key={room.id}>
+                <h3>{room.name || room.title}</h3>
 
-                <p style={{ fontSize: 14, color: "#555" }}>
-                  Kapasitas: {room.current || 0}/{room.capacity}
-                </p>
+                <p>Kapasitas: {room.current || 0}/{room.capacity}</p>
 
                 {isJoined ? (
                   <Link to={`/materi/${id}/room/${room.id}`}>
-                    <button
-                      style={{
-                        marginTop: 10,
-                        width: "100%",
-                        background: "#4e8df5",
-                        border: "none",
-                        borderRadius: 12,
-                        padding: "10px 0",
-                        cursor: "pointer",
-                        color: "white",
-                      }}
-                    >
-                      Masuk Kembali
-                    </button>
+                    <EnterButton>Masuk Kembali</EnterButton>
                   </Link>
                 ) : hasJoinedOther ? (
-                  <button
-                    style={{
-                      marginTop: 10,
-                      width: "100%",
-                      background: "#ddd",
-                      border: "none",
-                      borderRadius: 12,
-                      padding: "10px 0",
-                      cursor: "not-allowed",
-                    }}
-                    disabled
-                  >
+                  <DisabledButton disabled>
                     Sudah Join Room Lain
-                  </button>
+                  </DisabledButton>
                 ) : (
-                  <button
+                  <JoinButton
                     onClick={() => handleJoinRoom(room.id)}
-                    style={{
-                      marginTop: 10,
-                      width: "100%",
-                      background:
-                        room.current >= room.capacity ? "#ddd" : "#a7eeb5",
-                      border: "none",
-                      borderRadius: 12,
-                      padding: "10px 0",
-                      cursor:
-                        room.current >= room.capacity ? "not-allowed" : "pointer",
-                    }}
                     disabled={room.current >= room.capacity}
                   >
                     {room.current >= room.capacity ? "Penuh" : "Masuk Room"}
-                  </button>
+                  </JoinButton>
                 )}
-              </div>
+              </RoomCard>
             );
           })}
 
           {rooms.length === 0 && (
-            <p style={{ color: "#777" }}>
-              Belum ada ruang diskusi tersedia.
-            </p>
+            <NoRooms>Belum ada ruang diskusi tersedia.</NoRooms>
           )}
-        </div>
-      </div>
+        </RoomList>
+      </Wrapper>
     </Layout>
   );
 }
+
+// Styled Components
+const Wrapper = styled.div`
+  padding: 20px 40px;
+  font-family: 'Roboto', sans-serif;
+`;
+
+const Header = styled.div`
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  z-index: 10;
+  padding: 20px 25px;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+`;
+
+const HeaderLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const Title = styled.h2`
+  margin: 0;
+  color: #2c3e50;
+  font-weight: 700;
+  font-size: 32px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const Breadcrumb = styled.div`
+  font-size: 16px;
+  color: #7f8c8d;
+  margin-top: 8px;
+  font-weight: 500;
+`;
+
+const BackButton = styled.button`
+  background: #3759c7;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 28px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #3759c7;
+    transform: translateY(-2px);
+  }
+`;
+
+const RoomList = styled.div`
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+`;
+
+const RoomCard = styled.div`
+  width: 254px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+
+  h3 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-weight: 600;
+  }
+
+  p {
+    font-size: 14px;
+    color: #555;
+    margin: 10px 0;
+  }
+`;
+
+const EnterButton = styled.button`
+  margin-top: 10px;
+  width: 100%;
+  background: #3759c7;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 0;
+  cursor: pointer;
+  color: white;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #3759c7;
+    transform: translateY(-2px);
+  }
+`;
+
+const DisabledButton = styled.button`
+  margin-top: 10px;
+  width: 100%;
+  background: #ddd;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 0;
+  cursor: not-allowed;
+  color: #999;
+  font-weight: 600;
+`;
+
+const JoinButton = styled.button`
+  margin-top: 10px;
+  width: 100%;
+  background: ${({ disabled }) =>
+    disabled ? "#ddd" : "#a7eeb5"};
+  border: none;
+  border-radius: 12px;
+  padding: 10px 0;
+  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
+  color: ${({ disabled }) => (disabled ? "#999" : "#2a8b46")};
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled) {
+    background: #6ab678;
+    transform: translateY(-2px);
+  }
+`;
+
+const NoRooms = styled.p`
+  color: #777;
+  font-size: 16px;
+  text-align: center;
+  width: 100%;
+`;

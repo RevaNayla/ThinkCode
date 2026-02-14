@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import styled from "styled-components";
 import api from "../api/axiosClient";
 import Layout from "../components/Layout";
 
@@ -107,14 +108,16 @@ export default function UploadAnswer() {
       setScore(last.score || 0);
       setBadge(last.Badge); 
 
+      // Perbaiki: Gunakan /complete-step untuk "submit_answer"
+      console.log('Upload successful, attempting to complete "submit_answer"');
       api.get(`/materi/${materiId}`).then(res => {
-        const completed =
-          res.data?.data?.progress?.completedSections || [];
-
-        if (!completed.includes("upload")) {
-          api.post(`/materi/${materiId}/progress`, {
-            completedSections: [...completed, "upload"],
-          });
+        const completed = res.data?.data?.progress?.completedSections || [];
+        if (!completed.includes("submit_answer")) {
+          api.post(`/materi/${materiId}/complete-step`, { step: "submit_answer" })
+            .then(() => {
+              console.log('Step "submit_answer" completed');
+            })
+            .catch(err => console.error('Error completing "submit_answer":', err));
         }
       });
 
@@ -187,142 +190,44 @@ export default function UploadAnswer() {
 
   return (
     <Layout>
-      <div
-        style={{
-          padding: "15px 20px",
-          fontFamily: "'Roboto', sans-serif",
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div>
-            <h2 style={{ marginBottom: 5, color: "#333" }}>Upload Jawaban</h2>
-            <p style={{ marginTop: 0, color: "#666", fontSize: 14 }}>
-              Orientasi Masalah &gt; Diskusi &gt; Get Clue &gt; Upload
-            </p>
-          </div>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              background: "#3759c7",
-              color: "white",
-              border: "none",
-              borderRadius: 12,
-              padding: "10px 20px",
-              cursor: "pointer",
-              fontWeight: 600,
-              fontSize: 14,
-              transition: "background 0.3s, transform 0.2s",
-            }}
-            onMouseOver={(e) => {
-              e.target.style.background = "#2a4a9c";
-              e.target.style.transform = "scale(1.02)";
-            }}
-            onMouseOut={(e) => {
-              e.target.style.background = "#3759c7";
-              e.target.style.transform = "scale(1)";
-            }}
-          >
+      <Wrapper>
+        <Header>
+          <HeaderLeft>
+            <Title>Upload Jawaban</Title>
+            <Breadcrumb>
+              Orientasi Masalah &gt; Ruang Diskusi &gt; Workspace &gt; Upload
+            </Breadcrumb>
+          </HeaderLeft>
+          <BackButton onClick={() => navigate(-1)}>
             Kembali
-          </button>
-        </div>
+          </BackButton>
+        </Header>
 
-        <div
-          style={{
-            display: "flex",
-            gap: 40,
-            marginTop: 30,
-            flexWrap: "wrap",
-          }}
-        >
+        <Container>
           {/* LEFT */}
-          <div
-            style={{
-              flex: 1,
-              minWidth: 300,
-              background: "#ffffff",
-              borderRadius: 16,
-              padding: 25,
-              minHeight: 400,
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-              border: "1px solid #e0e0e0",
-            }}
-          >
-            <h3 style={{ marginTop: 0, color: "#3759c7" }}>Jawaban Kamu</h3>
+          <LeftPanel>
+            <h3>Jawaban Kamu</h3>
 
-            <textarea
+            <AnswerTextarea
               placeholder="Tulis jawabanmu di sini..."
               value={textAnswer}
               onChange={(e) => setTextAnswer(e.target.value)}
-              style={{
-                width: "93%",
-                height: 180,
-                borderRadius: 12,
-                border: "1px solid #bbb",
-                padding: 15,
-                resize: "none",
-                fontSize: 14,
-                background: "#fafafa",
-                boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.05)",
-                transition: "border-color 0.3s",
-              }}
-              onFocus={(e) => (e.target.style.borderColor = "#3759c7")}
-              onBlur={(e) => (e.target.style.borderColor = "#bbb")}
             />
 
             {/* FILE */}
-            <div
-              style={{
-                marginTop: 20,
-                background: "#fafafa",
-                border: "1px solid #ddd",
-                padding: "15px 20px",
-                borderRadius: 15,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                boxShadow: "0 2px 6px rgba(0, 0, 0, 0.05)",
-              }}
-            >
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontSize: 14, color: "#444" }}>
-                  {file ? file.name : "Belum ada file dipilih."}
-                </p>
+            <FileSection>
+              <div>
+                <p>{file ? file.name : "Belum ada file dipilih."}</p>
                 {file && file.url && (
-                  <button
-                    onClick={() => openModal(file)}
-                    style={{
-                      marginTop: 5,
-                      fontSize: 12,
-                      color: "#3759c7",
-                      textDecoration: "underline",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                    }}
-                  >
+                  <ViewFileButton onClick={() => openModal(file)}>
                     Lihat File
-                  </button>
+                  </ViewFileButton>
                 )}
               </div>
 
-              <button
-                onClick={() => fileInputRef.current.click()}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  border: "none",
-                  background: "#3759c7",
-                  color: "white",
-                  fontSize: 22,
-                  cursor: "pointer",
-                  transition: "background 0.3s",
-                }}
-                onMouseOver={(e) => (e.target.style.background = "#2a4a9c")}
-                onMouseOut={(e) => (e.target.style.background = "#3759c7")}
-              >
+              <UploadButton onClick={() => fileInputRef.current.click()}>
                 +
-              </button>
+              </UploadButton>
 
               <input
                 type="file"
@@ -330,190 +235,359 @@ export default function UploadAnswer() {
                 onChange={(e) => setFile(e.target.files[0])}
                 style={{ display: "none" }}
               />
-            </div>
+            </FileSection>
 
-            <button
+            <SubmitButton
               onClick={submit}
               disabled={!userId || !materiId}
-              style={{
-                marginTop: 25,
-                width: "100%",
-                background: "#3759c7",
-                color: "white",
-                border: "none",
-                borderRadius: 12,
-                padding: "12px 0",
-                cursor: "pointer",
-                fontWeight: 600,
-                fontSize: 15,
-                transition: "background 0.3s, transform 0.2s",
-              }}
-              onMouseOver={(e) => {
-                e.target.style.background = "#2a4a9c";
-                e.target.style.transform = "scale(1.02)";
-              }}
-              onMouseOut={(e) => {
-                e.target.style.background = "#3759c7";
-                e.target.style.transform = "scale(1)";
-              }}
             >
               Kirim Jawaban
-            </button>
-          </div>
+            </SubmitButton>
+          </LeftPanel>
 
           {/* RIGHT */}
-          <div
-            style={{
-              width: 310,
-              background: "#ffffff",
-              borderRadius: 16,
-              padding: 25,
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-              border: "1px solid #e0e0e0",
-            }}
-          >
-            <h3 style={{ marginTop: 0, color: "#3759c7" }}>Feedback Guru</h3>
+          <RightPanel>
+            <h3>Feedback Guru</h3>
 
-            <textarea
-              value={feedback}
-              disabled
-              style={{
-                width: "93%",
-                height: 100,
-                borderRadius: 12,
-                border: "none",
-                padding: 15,
-                resize: "none",
-                background: "#fafafa",
-                fontSize: 14,
-                boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.05)",
-              }}
-            />
+            <FeedbackTextarea value={feedback} disabled />
 
-            <div style={{ marginTop: 15 }}>
-            <p style={{ margin: 0, fontWeight: 600, color: "#333" }}>
-              Score: <span style={{ color: "#3759c7" }}>{score}</span>
-            </p>
-
-            <div style={{ marginTop: 8 }}>
-              <p style={{ margin: 0, fontWeight: 600, color: "#333" }}>
-                Badge:
+            <ScoreBadgeSection>
+              <p>
+                Score: <ScoreValue>{score}</ScoreValue>
               </p>
 
-              {badge ? (
-                <div
-                  style={{
-                    marginTop: 8,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center", 
-                  }}
-                >
-                  <img
-                    src={buildUrl(badge.image)}
-                    alt={badge.badge_name || "Badge"}
-                    style={{
-                      width: 180,
-                      height: 180,
-                      objectFit: "contain",
-                      borderRadius: 12,
-                    }}
-                    onError={(e) => {
-                      console.error("Badge image error:", e.target.src);
-                      e.target.style.display = "none";
-                    }}
-                  />
+              <div>
+                <p>Badge:</p>
 
-                  <span
-                    style={{
-                      marginTop: 6,
-                      fontWeight: 600,
-                      color: "#3e46b9",
-                    }}
-                  >
-                    {badge.badge_name || "Nama Badge Tidak Tersedia"}
-                  </span>
-                </div>
-              ) : (
-                <span style={{ color: "#ff9800" }}>Belum ada</span>
-              )}
-            </div>
-          </div>
+                {badge ? (
+                  <BadgeContainer>
+                    <BadgeImage
+                      src={buildUrl(badge.image)}
+                      alt={badge.badge_name || "Badge"}
+                      onError={(e) => {
+                        console.error("Badge image error:", e.target.src);
+                        e.target.style.display = "none";
+                      }}
+                    />
 
+                    <BadgeName>
+                      {badge.badge_name || "Nama Badge Tidak Tersedia"}
+                    </BadgeName>
+                  </BadgeContainer>
+                ) : (
+                  <NoBadge>Belum ada</NoBadge>
+                )}
+              </div>
+            </ScoreBadgeSection>
 
-            <button
-              onClick={() => navigate("/leaderboard")}
-              style={{
-                width: "100%",
-                background: "linear-gradient(135deg, #c0f4c6 0%, #a8e6a1 100%)",
-                border: "none",
-                borderRadius: 15,
-                padding: "12px 0",
-                cursor: "pointer",
-                fontWeight: 600,
-                marginTop: 20,
-                color: "#2a8b46",
-                transition: "transform 0.2s",
-              }}
-              onMouseOver={(e) => (e.target.style.transform = "scale(1.05)")}
-              onMouseOut={(e) => (e.target.style.transform = "scale(1)")}
-            >
+            <LeaderboardButton onClick={() => navigate("/leaderboard")}>
               Lihat Leaderboard
-            </button>
-          </div>
-        </div>
+            </LeaderboardButton>
+          </RightPanel>
+        </Container>
 
         {/* MODAL */}
         {modalOpen && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              backgroundColor: "rgba(0, 0, 0, 0.7)",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 1000,
-            }}
-            onClick={closeModal} 
-          >
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: 16,
-                padding: 20,
-                maxWidth: "90%",
-                maxHeight: "90%",
-                overflow: "auto",
-                position: "relative",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-              }}
-              onClick={(e) => e.stopPropagation()} 
-            >
-              <button
-                onClick={closeModal}
-                style={{
-                  position: "absolute",
-                  top: 10,
-                  right: 10,
-                  background: "none",
-                  border: "none",
-                  fontSize: 20,
-                  cursor: "pointer",
-                  color: "#333",
-                }}
-              >
-                ×
-              </button>
-              <h4 style={{ marginTop: 0, color: "#3759c7" }}>{currentFile?.name}</h4>
+          <ModalOverlay onClick={closeModal}>
+            <ModalContent onClick={(e) => e.stopPropagation()}>
+              <CloseButton onClick={closeModal}>×</CloseButton>
+              <ModalTitle>{currentFile?.name}</ModalTitle>
               {renderModalContent()}
-            </div>
-          </div>
+            </ModalContent>
+          </ModalOverlay>
         )}
-      </div>
+      </Wrapper>
     </Layout>
   );
 }
+
+// Styled Components
+const Wrapper = styled.div`
+  padding: 20px 40px;
+  font-family: 'Roboto', sans-serif;
+`;
+
+const Header = styled.div`
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  z-index: 10;
+  padding: 20px 25px;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+`;
+
+const HeaderLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const Title = styled.h2`
+  margin: 0;
+  color: #2c3e50;
+  font-weight: 700;
+  font-size: 32px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const Breadcrumb = styled.div`
+  font-size: 16px;
+  color: #7f8c8d;
+  margin-top: 8px;
+  font-weight: 500;
+`;
+
+const BackButton = styled.button`
+  background: #3759c7;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 28px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #2a4a9c;
+    transform: translateY(-2px);
+  }
+`;
+
+const Container = styled.div`
+  display: flex;
+  gap: 40px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+`;
+
+const LeftPanel = styled.div`
+  flex: 1;
+  min-width: 300px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 25px;
+  min-height: 400px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+
+  h3 {
+    margin-top: 0;
+    color: #3759c7;
+  }
+`;
+
+const AnswerTextarea = styled.textarea`
+  width: 93%;
+  height: 180px;
+  border-radius: 12px;
+  border: 1px solid #bbb;
+  padding: 15px;
+  resize: none;
+  font-size: 14px;
+  background: #fafafa;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.3s;
+  font-family: 'Roboto', sans-serif;
+
+  &:focus {
+    outline: none;
+    border-color: #3759c7;
+  }
+`;
+
+const FileSection = styled.div`
+  margin-top: 20px;
+  background: #fafafa;
+  border: 1px solid #ddd;
+  padding: 15px 20px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+
+  div {
+    flex: 1;
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: #444;
+    }
+  }
+`;
+
+const ViewFileButton = styled.button`
+  margin-top: 5px;
+  font-size: 12px;
+  color: #3759c7;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+`;
+
+const UploadButton = styled.button`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #3759c7;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  transition: background 0.3s;
+
+  &:hover {
+    background: #2a4a9c;
+  }
+`;
+
+const SubmitButton = styled.button`
+  margin-top: 25px;
+  width: 100%;
+  background: #3759c7;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 0;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled) {
+    background: #2a4a9c;
+    transform: translateY(-2px);
+  }
+
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+`;
+
+const RightPanel = styled.div`
+  width: 310px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+
+  h3 {
+    margin-top: 0;
+    color: #3759c7;
+  }
+`;
+
+const FeedbackTextarea = styled.textarea`
+  width: 93%;
+  height: 100px;
+  border-radius: 12px;
+  border: none;
+  padding: 15px;
+  resize: none;
+  background: #fafafa;
+  font-size: 14px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  font-family: 'Roboto', sans-serif;
+`;
+
+const ScoreBadgeSection = styled.div`
+  margin-top: 15px;
+
+  p {
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    color: #333;
+  }
+
+  div {
+    margin-top: 8px;
+
+    p {
+      margin: 0 0 8px 0;
+      font-weight: 600;
+      color: #333;
+    }
+  }
+`;
+
+const ScoreValue = styled.span`
+  color: #3759c7;
+`;
+
+const BadgeContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const BadgeImage = styled.img`
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  border-radius: 12px;
+`;
+
+const BadgeName = styled.span`
+  margin-top: 6px;
+  font-weight: 600;
+  color: #3e46b9;
+`;
+
+const NoBadge = styled.span`
+  color: #ff9800;
+`;
+
+const LeaderboardButton = styled.button`
+  width: 100%;
+  background: linear-gradient(135deg, #c0f4c6 0%, #a8e6a1 100%);
+  border: none;
+  border-radius: 15px;
+  padding: 12px 0;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 20px;
+  color: #2a8b46;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 90%;
+  max-height: 90%;
+  overflow: auto;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+`;

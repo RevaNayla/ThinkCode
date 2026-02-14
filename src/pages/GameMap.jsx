@@ -59,7 +59,7 @@ export default function GameMap() {
 
   return (
     <Layout>
-      <div style={{ padding: 40 }}>
+        <div style={{ padding: 40, fontFamily: 'Roboto, sans-serif' }}>
         {materiList.map((materi, mIdx) => (
           <div key={materi.materiId} style={{ marginBottom: 60 }}>
 
