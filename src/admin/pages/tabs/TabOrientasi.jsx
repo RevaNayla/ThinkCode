@@ -7,6 +7,7 @@ export default function TabOrientasi({ materiId }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const baseUrl = import.meta.env.VITE_API_URL.replace('/api', ''); 
 
   // Load Orientasi
   const loadData = async () => {
@@ -86,18 +87,10 @@ export default function TabOrientasi({ materiId }) {
       <h2 style={{ margin: 0 }}>Orientasi Masalah</h2>
 
     {/* PREVIEW */}
-    <div style={{
-      position: "relative",
-      width: "100%",
-      paddingTop: "56.25%", 
-      background: "#000",
-      borderRadius: 8,
-      overflow: "hidden",
-    }}>
-      {data?.content ? (
-        data.content.includes("/uploads/") ? (
+    {data?.content ? (
+      data.content.includes("/uploads/") ? (
         <video
-          src={`${import.meta.env.VITE_API_URL}${data.content}`}
+          src={`${baseUrl}${data.content}`} 
           controls
           preload="metadata"
           style={{
@@ -109,22 +102,21 @@ export default function TabOrientasi({ materiId }) {
             objectFit: "contain",
           }}
         />
-        ) : (
-          <a
-            href={data.content}
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "#fff" }}
-          >
-            {data.content}
-          </a>
-        )
       ) : (
-        <div style={{ color: "#fff", opacity: 0.7 }}>
-          Belum ada orientasi
-        </div>
-      )}
-    </div>
+        <a
+          href={data.content}
+          target="_blank"
+          rel="noreferrer"
+          style={{ color: "#fff" }}
+        >
+          {data.content}
+        </a>
+      )
+    ) : (
+      <div style={{ color: "#fff", opacity: 0.7 }}>
+        Belum ada orientasi
+      </div>
+    )}
 
 
       {/* INPUT URL */}
