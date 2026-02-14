@@ -24,7 +24,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await api.post("/auth/register", {
+      const res = await api.post("/register", {
         ...data,
         role: "student" // Role default student
       });
