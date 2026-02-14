@@ -87,10 +87,18 @@ export default function TabOrientasi({ materiId }) {
       <h2 style={{ margin: 0 }}>Orientasi Masalah</h2>
 
     {/* PREVIEW */}
-    {data?.content ? (
-      data.content.includes("/uploads/") ? (
+    <div style={{
+      position: "relative",
+      width: "100%",
+      paddingTop: "56.25%", 
+      background: "#000",
+      borderRadius: 8,
+      overflow: "hidden",
+    }}>
+      {data?.content ? (
+        data.content.includes("/uploads/") ? (
         <video
-          src={`${baseUrl}${data.content}`} 
+          src={`${baseUrl}${data.content}`}
           controls
           preload="metadata"
           style={{
@@ -102,21 +110,22 @@ export default function TabOrientasi({ materiId }) {
             objectFit: "contain",
           }}
         />
+        ) : (
+          <a
+            href={data.content}
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: "#fff" }}
+          >
+            {data.content}
+          </a>
+        )
       ) : (
-        <a
-          href={data.content}
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: "#fff" }}
-        >
-          {data.content}
-        </a>
-      )
-    ) : (
-      <div style={{ color: "#fff", opacity: 0.7 }}>
-        Belum ada orientasi
-      </div>
-    )}
+        <div style={{ color: "#fff", opacity: 0.7 }}>
+          Belum ada orientasi
+        </div>
+      )}
+    </div>
 
 
       {/* INPUT URL */}
