@@ -8,15 +8,13 @@ export default function Register() {
   const [data, setData] = useState({
     name: "",
     email: "",
-    class: "", // Kelas sekarang diketik manual
+    class: "",
     password: "",
-    // Role dihapus dari state, default "student"
+    role: "student", // default student
   });
 
   const [loading, setLoading] = useState(false); 
   const [error, setError] = useState(""); 
-
-  // useEffect untuk fetch classes dihapus karena kelas diketik manual
 
   const submit = async (e) => {
     e.preventDefault();
@@ -24,10 +22,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await api.post("/auth/register", {
-        ...data,
-        role: "student" // Role default student
-      });
+      const res = await api.post("/auth/register", data); // <-- path sudah sesuai backend
 
       alert(res.data.message);
 
@@ -35,6 +30,7 @@ export default function Register() {
         window.location.href = "/login";
       }
     } catch (err) {
+      console.log("Register error:", err);
       setError("Terjadi kesalahan pada server. Silakan coba lagi.");
     } finally {
       setLoading(false);
@@ -44,7 +40,6 @@ export default function Register() {
   return (
     <div style={styles.pageContainer}>
       <Navbar />
-
       <div style={styles.container}>
         <div style={styles.header}>
           <h2 style={styles.title}>Daftar Akun Baru</h2>
@@ -57,6 +52,7 @@ export default function Register() {
           {error && <p style={styles.error}>{error}</p>}
 
           <form onSubmit={submit} style={styles.form}>
+            {/* Nama */}
             <div style={styles.inputGroup}>
               <label style={styles.label}>Nama Lengkap</label>
               <input
@@ -69,6 +65,7 @@ export default function Register() {
               />
             </div>
 
+            {/* Email */}
             <div style={styles.inputGroup}>
               <label style={styles.label}>Email</label>
               <input
@@ -81,6 +78,7 @@ export default function Register() {
               />
             </div>
 
+            {/* Kelas */}
             <div style={styles.inputGroup}>
               <label style={styles.label}>Kelas</label>
               <input
@@ -93,8 +91,22 @@ export default function Register() {
               />
             </div>
 
-            {/* Field Role dihapus */}
+            {/* Role */}
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Role</label>
+              <select
+                value={data.role}
+                onChange={(e) => setData({ ...data, role: e.target.value })}
+                style={styles.input}
+                required
+              >
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
 
+            {/* Password */}
             <div style={styles.inputGroup}>
               <label style={styles.label}>Password</label>
               <input
@@ -119,7 +131,6 @@ export default function Register() {
           </div>
         </div>
       </div>
-
       <Footer />
     </div>
   );
