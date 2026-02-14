@@ -113,7 +113,7 @@ const Input = styled.input`
 `;
 
 const Textarea = styled.textarea`
-  width:100%;
+  width:96%;
   padding:10px;
   min-height:80px;
   border-radius:8px;
