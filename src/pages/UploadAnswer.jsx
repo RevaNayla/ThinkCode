@@ -5,11 +5,12 @@ import api from "../api/axiosClient";
 import Layout from "../components/Layout";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const BASE_URL = API_URL.replace('/api', '');
 
 const buildUrl = (path) => {
   if (!path) return null;
   if (path.startsWith("http")) return path;
-  return `${API_URL}${path}`;
+  return `${BASE_URL}${path}`;
 };
 
 export default function UploadAnswer() {

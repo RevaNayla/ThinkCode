@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import styled from "styled-components"; // Tambahkan import ini
+import styled from "styled-components"; 
 import api from "../api/axiosClient";
 import MiniLessonModal from "../components/MiniLessonModal";
 import Layout from "../components/Layout";
@@ -10,7 +10,7 @@ export default function MateriDetail() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [showMini, setShowMini] = useState(false);
-  const [completedSteps, setCompletedSteps] = useState([]); // Track steps untuk hindari duplikat
+  const [completedSteps, setCompletedSteps] = useState([]); 
 
   useEffect(() => {
     api
@@ -72,19 +72,29 @@ export default function MateriDetail() {
         <VideoWrapper>
           {videoSection ? (
             videoSection.content.includes("/uploads/") ? (
-              <video
-                src={`${import.meta.env.VITE_API_URL}${videoSection.content}`}
-                controls
-                preload="metadata"
-                onEnded={handleVideoEnd}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: 12,
-                  background: "#000",
-                  objectFit: "contain",
-                }}
-              />
+              (() => {
+                // Logika untuk handle URL: Jika sudah lengkap (https://), gunakan langsung; jika relatif, gabung baseUrl
+                const baseUrl = import.meta.env.VITE_API_URL.replace('/api', '');  // Base tanpa /api
+                const videoSrc = videoSection.content.startsWith('https://') 
+                  ? videoSection.content 
+                  : `${baseUrl}${videoSection.content}`;
+                console.log("Video src:", videoSrc);  // Tambah logging untuk debug
+                return (
+                  <video
+                    src={videoSrc}
+                    controls
+                    preload="metadata"
+                    onEnded={handleVideoEnd}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: 12,
+                      background: "#000",
+                      objectFit: "contain",
+                    }}
+                  />
+                );
+              })()
             ) : (
               <iframe
                 title="materi-video"
