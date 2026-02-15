@@ -235,6 +235,7 @@ export default function BadgeAdmin() {
   const fetchBadges = async () => {
     try {
       const res = await apiGet("/admin/badges");
+      console.log("Badges data:", res.data ?? res);
       setBadges(res.data ?? res);
     } catch (err) {
       console.error(err);
@@ -242,31 +243,36 @@ export default function BadgeAdmin() {
     }
   };
 
-  const saveBadge = async () => {
-    if (!form.badge_name) {
-      alert("Nama badge wajib diisi");
-      return;
-    }
+const saveBadge = async () => {
+  if (!form.badge_name) {
+    alert("Nama badge wajib diisi");
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append("badge_name", form.badge_name);
-    formData.append("description", form.description);
-    formData.append("icon", form.icon);
-    if (form.file) formData.append("image", form.file);
+  const formData = new FormData();
+  formData.append("badge_name", form.badge_name);
+  formData.append("description", form.description);
+  formData.append("icon", form.icon);
+  if (form.file) formData.append("image", form.file);
 
-    try {
-      if (editingId) {
-        await apiPutForm(`/admin/badges/${editingId}`, formData);
-      } else {
-        await apiPostForm("/admin/badges", formData);
-      }
-      resetForm();
-      fetchBadges();
-    } catch (err) {
-      console.error(err);
-      alert("Gagal menyimpan badge");
+  console.log("FormData contents:", Array.from(formData.entries()));  
+  console.log("Editing ID:", editingId);  
+
+  try {
+    if (editingId) {
+      console.log("Calling PUT:", `/admin/badges/${editingId}`);
+      await apiPutForm(`/admin/badges/${editingId}`, formData);
+    } else {
+      console.log("Calling POST:", "/admin/badges");
+      await apiPostForm("/admin/badges", formData);
     }
-  };
+    resetForm();
+    fetchBadges();
+  } catch (err) {
+    console.error("Error saving badge:", err);
+    alert("Gagal menyimpan badge: " + err.message);
+  }
+};
 
   const deleteBadge = async (id) => {
     if (!window.confirm("Hapus badge ini?")) return;
@@ -293,6 +299,9 @@ export default function BadgeAdmin() {
     setEditingId(null);
     setForm({ badge_name: "", description: "", icon: "", file: null });
   };
+
+  const baseUrl = import.meta.env.VITE_API_URL.replace('/api', ''); 
+  
 
   return (
     <Container>
@@ -387,10 +396,7 @@ export default function BadgeAdmin() {
               <TableRow key={b.id}>
                 <TableCell>
                   {b.image ? (
-                    <BadgeImage
-                      src={`${import.meta.env.VITE_API_URL}${b.image}`}
-                      alt={b.badge_name}
-                    />
+                  <BadgeImage src={`${baseUrl}${b.image}`} alt={b.badge_name} />
                   ) : (
                     <BadgeIcon>{b.icon}</BadgeIcon>
                   )}

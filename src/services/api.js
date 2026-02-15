@@ -117,7 +117,7 @@ export async function apiPostForm(path, formData) {
 
 export async function apiPutForm(url, formData) {
   const token = localStorage.getItem("token");
-  return fetch(`${BASE_URL}/api${url}`, {
+  return fetch(`${BASE_URL}${url}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,

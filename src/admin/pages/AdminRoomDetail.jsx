@@ -210,18 +210,33 @@ export default function AdminRoomDetail() {
       setMembers(jm.data || []);
 
       // Fetch workspace
-      const jw = await apiGet(`/admin/discussion/workspace/latest/${roomId}`);
+   const jw = await apiGet(`/admin/discussion/workspace/latest/${roomId}`);
       if (jw.status && jw.data) {
         setWorkspace(jw.data);
-        // Parse JSON flowchart
-        const flowchartStr = jw.data.flowchart || '{"conditions":[],"elseInstruction":""}';
-        const flowchartData = JSON.parse(flowchartStr);
+        // Parse JSON flowchart dengan check tipe
+        const flowchartRaw = jw.data.flowchart;
+        let flowchartData = { conditions: [], elseInstruction: "" };
+        
+        if (flowchartRaw) {
+          if (typeof flowchartRaw === 'string') {
+            try {
+              flowchartData = JSON.parse(flowchartRaw);
+            } catch (e) {
+              console.error("Error parsing flowchart string:", e);
+              flowchartData = { conditions: [], elseInstruction: "" };
+            }
+          } else if (typeof flowchartRaw === 'object') {
+            flowchartData = flowchartRaw;  // Sudah object, gunakan langsung
+          }
+        }
+        
         setConditions(flowchartData.conditions || []);
         setElseInstruction(flowchartData.elseInstruction || "");
       }
 
       // Fetch attempts
       const ja = await apiGet(`/admin/discussion/workspace/attempts/${roomId}`);
+      console.log("Attempts response:", ja);
       if (ja.status) setAttempts(ja.data || []);
 
     } catch (e) {
