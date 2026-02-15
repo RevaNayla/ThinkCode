@@ -418,6 +418,14 @@ const CloseButton = styled.button`
   }
 `;
 
+const ModalTitle = styled.h3`
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  color: #2c3e50;
+  text-align: center;
+`;
+
+
 const FileSection = styled.div`
   margin-top: 20px;
   background: #fafafa;
