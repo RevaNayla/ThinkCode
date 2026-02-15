@@ -34,6 +34,7 @@ const quillModules = (materiId) => ({
             const quill = this.quill;
             const range = quill.getSelection(true);
 
+            const imageUrl = res.url.startsWith('http') ? res.url : `https://thinkcode-backend-production.up.railway.app${res.url}`;
             quill.insertEmbed(range.index, "image", res.url);
             quill.setSelection(range.index + 1);
           } catch (err) {

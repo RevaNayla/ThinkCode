@@ -98,7 +98,7 @@ export default function TabOrientasi({ materiId }) {
       {data?.content ? (
         data.content.includes("/uploads/") ? (
         <video
-          src={`${baseUrl}${data.content}`}
+          src={`https://thinkcode-backend-production.up.railway.app${data.content}`}
           controls
           preload="metadata"
           style={{

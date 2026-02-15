@@ -1,5 +1,5 @@
-const BASE_URL = "https://thinkcode-backend-production.up.railway.app"; ;
-const API_BASE = import.meta.env.VITE_API_URL || "https://thinkcode-backend-production.up.railway.app"; ;
+const API_BASE = import.meta.env.VITE_API_URL || "https://thinkcode-backend-production.up.railway.app/api";  // Default dengan /api untuk API calls
+const BASE_URL = API_BASE.replace('/api', '');
 
 function getHeaders(isForm = false) {
   const token = localStorage.getItem("token");
@@ -117,7 +117,7 @@ export async function apiPostForm(path, formData) {
 
 export async function apiPutForm(url, formData) {
   const token = localStorage.getItem("token");
-  return fetch(`${BASE_URL}${url}`, {
+  return fetch(`${API_BASE}${url}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
