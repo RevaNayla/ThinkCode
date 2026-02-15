@@ -124,14 +124,18 @@ export default function AdminSubmission() {
     setModalData(null);
   }
 
-  const openFileModal = (sub) => {
-    if (!sub.filePath) return;
-    setCurrentFile({
-      name: sub.filePath.split("/").pop(),
-      url: `${import.meta.env.VITE_API_URL}${sub.filePath}`,
-    });
-    setFileModalOpen(true);
-  };
+const openFileModal = (sub) => {
+  if (!sub.filePath) return;
+
+  const baseURL = import.meta.env.VITE_API_URL.replace("/api", "");
+
+  setCurrentFile({
+    name: sub.filePath.split("/").pop(),
+    url: `${baseURL}${sub.filePath}`,
+  });
+
+  setFileModalOpen(true);
+};
 
   const closeFileModal = () => {
     setFileModalOpen(false);

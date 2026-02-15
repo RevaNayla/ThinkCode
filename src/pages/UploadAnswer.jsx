@@ -403,6 +403,20 @@ const AnswerTextarea = styled.textarea`
     border-color: #3759c7;
   }
 `;
+const CloseButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #333;
+
+  &:hover {
+    color: red;
+  }
+`;
 
 const FileSection = styled.div`
   margin-top: 20px;
