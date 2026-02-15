@@ -3,9 +3,6 @@ import { apiGet, apiPost, apiPut, apiDelete, apiUpload,} from "../../../services
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
-const secureUrl = res.url.replace('http://', 'https://');
-quill.insertEmbed(range.index, 'image', secureUrl);
-
 
 /* ================= QUILL CONFIG ================= */
 const quillModules = (materiId) => ({
