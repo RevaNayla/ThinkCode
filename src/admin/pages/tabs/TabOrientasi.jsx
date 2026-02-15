@@ -75,58 +75,58 @@ export default function TabOrientasi({ materiId }) {
   };
 
   if (loading) return <div>Memuat orientasi...</div>;
-
-  return (
-    <div style={{
-      padding: 20,
-      display: "flex",
-      flexDirection: "column",
-      gap: 20
-    }}>
-      
+return (
+    <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 20 }}>
       <h2 style={{ margin: 0 }}>Orientasi Masalah</h2>
 
-    {/* PREVIEW */}
-    <div style={{
-      position: "relative",
-      width: "100%",
-      paddingTop: "56.25%", 
-      background: "#000",
-      borderRadius: 8,
-      overflow: "hidden",
-    }}>
-      {data?.content ? (
-        data.content.includes("/uploads/") ? (
-        <video
-          src={`https://thinkcode-backend-production.up.railway.app${data.content}`}
-          controls
-          preload="metadata"
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "contain",
-          }}
-        />
+      <div style={{
+        position: "relative",
+        width: "100%",
+        paddingTop: "56.25%", 
+        background: "#000",
+        borderRadius: 8,
+        overflow: "hidden",
+      }}>
+        {data?.content ? (
+          data.content.includes("/uploads/") ? (
+            (() => {
+              // Logika untuk handle URL: Jika sudah lengkap (https://), gunakan langsung; jika relatif, gabung baseUrl
+              const videoSrc = data.content.startsWith('https://') 
+                ? data.content 
+                : `${baseUrl}${data.content}`;
+              console.log("Video src:", videoSrc);  // Tambah logging untuk debug
+              return (
+                <video
+                  src={videoSrc}
+                  controls
+                  preload="metadata"
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                  }}
+                />
+              );
+            })()
+          ) : (
+            <a
+              href={data.content.startsWith('http') ? data.content : `https://${data.content}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "#fff" }}
+            >
+              {data.content}
+            </a>
+          )
         ) : (
-          <a
-            href={data.content}
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "#fff" }}
-          >
-            {data.content}
-          </a>
-        )
-      ) : (
-        <div style={{ color: "#fff", opacity: 0.7 }}>
-          Belum ada orientasi
-        </div>
-      )}
-    </div>
-
+          <div style={{ color: "#fff", opacity: 0.7 }}>
+            Belum ada orientasi
+          </div>
+        )}
+      </div>
 
       {/* INPUT URL */}
       <div style={{ display: "flex", gap: 10 }}>
