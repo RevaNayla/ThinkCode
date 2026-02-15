@@ -13,16 +13,28 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
 
   // Circle Badge Component for Achievements
-  const CircleBadge = ({ title, image }) => (
+const CircleBadge = ({ title, image }) => {
+  const baseURL = import.meta.env.VITE_API_URL.replace("/api", "");
+
+  return (
     <CircleBox>
       {image ? (
-        <BadgeImage src={`${import.meta.env.VITE_API_URL}${image}`} alt={title} />
+        <BadgeImage
+          src={`${baseURL}${image}`}
+          alt={title}
+          onError={(e) => {
+            console.log("Badge error:", e.target.src);
+            e.target.style.display = "none";
+          }}
+        />
       ) : (
         <BadgeFallback>🏆</BadgeFallback>
       )}
       <BadgeTitle>{title}</BadgeTitle>
     </CircleBox>
   );
+};
+
 
   // Action Link Component
   const ActionLink = ({ href, children }) => (
